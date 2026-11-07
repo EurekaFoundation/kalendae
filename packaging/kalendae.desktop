@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kalendae
+GenericName=Calendario
+Comment=Calendario libero e open source
+Exec=Kalendae
+Icon=kalendae
+Terminal=false
+Categories=Office;Calendar;Qt;
+Keywords=calendario;eventi;agenda;promemoria;
+StartupWMClass=kalendae
