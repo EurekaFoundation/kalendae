@@ -1,10 +1,10 @@
 ; Installer Windows di Kalendae (Inno Setup 6)
-; Compilazione:  iscc /DMyAppVersion=0.2.0 packaging\kalendae.iss
+; Compilazione:  iscc /DMyAppVersion=0.3.0 packaging\kalendae.iss
 ; Richiede prima:  python scripts\build.py
 
 #define MyAppName "Kalendae"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.2.0"
+  #define MyAppVersion "0.3.0"
 #endif
 #define MyAppExe "Kalendae.exe"
 
