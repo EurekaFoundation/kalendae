@@ -10,7 +10,10 @@ readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Francesco Franchino" }]
 requires-python = ">=3.10"
-dependencies = ["PySide6>=6.5"]
+dependencies = [
+    "PySide6>=6.6",
+    "eureka-core @ git+https://github.com/EurekaFoundation/eureka-core@v0.1.1",
+]
 
 [project.gui-scripts]
 kalendae = "kalendae.__main__:main"

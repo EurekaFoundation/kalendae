@@ -5,6 +5,8 @@ Le *Kalendae* (calende) erano il primo giorno di ogni mese nel calendario romano
 
 Funziona interamente in locale: i dati restano sul computer, in un database SQLite.
 
+Fa parte di **[Eureka Suite](https://github.com/EurekaFoundation)**: tema e impostazioni sono condivisi con gli altri programmi della suite tramite [eureka-core](https://github.com/EurekaFoundation/eureka-core).
+
 ## Funzionalità
 
 - Viste **Giorno**, **Settimana**, **Mese** e **Agenda** (prossimi 30 giorni)

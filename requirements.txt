@@ -1,1 +1,2 @@
-PySide6>=6.5
+PySide6>=6.6
+eureka-core @ git+https://github.com/EurekaFoundation/eureka-core@v0.1.1
