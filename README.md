@@ -156,4 +156,4 @@ python -m pytest tests
 
 ## Licenza
 
-MIT — vedi il file `LICENSE`.
+GNU GPL v3 o successiva — vedi il file `LICENSE`. Puoi usare, studiare, modificare e ridistribuire Kalendae liberamente, a patto che le versioni modificate restino libere con la stessa licenza.

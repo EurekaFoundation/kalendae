@@ -7,7 +7,7 @@ name = "kalendae"
 version = "0.2.0"
 description = "Calendario libero e open source in stile Google Calendar"
 readme = "README.md"
-license = { text = "MIT" }
+license = { text = "GPL-3.0-or-later" }
 authors = [{ name = "Francesco Franchino" }]
 requires-python = ">=3.10"
 dependencies = [
