@@ -44,6 +44,7 @@ def main() -> None:
         "--clean",
         "--icon", str(make_icon()),
         "--paths", str(ROOT),
+        "--collect-data", "eureka_core",   # traduzioni e dati di Eureka Suite
         "--distpath", str(ROOT / "dist"),
         "--workpath", str(BUILD / "work"),
         "--specpath", str(BUILD),

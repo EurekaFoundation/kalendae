@@ -4,8 +4,8 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import date, datetime, timedelta
 
-from PySide6.QtCore import QSettings, Qt, QTimer
-from PySide6.QtGui import QAction, QActionGroup, QGuiApplication, QKeySequence, QPalette
+from PySide6.QtCore import QByteArray, Qt, QTimer
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence, QPalette
 from PySide6.QtPrintSupport import QPrinter, QPrintPreviewDialog
 from PySide6.QtWidgets import (
     QApplication, QButtonGroup, QFileDialog, QFrame, QHBoxLayout, QInputDialog, QLabel, QLineEdit,
@@ -13,7 +13,6 @@ from PySide6.QtWidgets import (
     QToolButton, QVBoxLayout, QWidget,
 )
 
-from .. import __version__
 from .. import series
 from ..database import Database, Event
 from ..ics import export_ics, import_into
@@ -24,7 +23,7 @@ from . import printing
 from .event_dialog import EventDialog, ScopeDialog
 from .month_view import MonthView
 from .sidebar import Sidebar
-from .theme import THEMES, apply_theme
+from .theme import THEMES
 from .week_view import WeekView
 
 VIEWS = [("day", "Giorno", "D"), ("week", "Settimana", "W"), ("month", "Mese", "M"), ("agenda", "Agenda", "A")]
@@ -35,11 +34,11 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.db = db
         self.current = date.today()
-        self.settings = QSettings("Kalendae", "Kalendae")
-        self.mode = self.settings.value("view", "week")
+        self.app = QApplication.instance()          # EurekaApp: tema, impostazioni, aggiornamenti
+        self.settings = self.app.settings.app       # impostazioni proprie di Kalendae
+        self.mode = self.settings.get("view", "week")
         if self.mode not in dict((k, 1) for k, _, _ in VIEWS):
             self.mode = "week"
-        self.theme = self.settings.value("theme", "system")
         self._quitting = False
         self.setWindowTitle("Kalendae")
         self.setWindowIcon(app_icon())
@@ -146,15 +145,10 @@ class MainWindow(QMainWindow):
         self._daily.timeout.connect(self._tick)
         self._daily.start(60_000)
 
-        apply_theme(self.theme)
-        try:  # segue il sistema quando cambia tema chiaro/scuro
-            QGuiApplication.styleHints().colorSchemeChanged.connect(
-                lambda _: apply_theme(self.theme) if self.theme == "system" else None)
-        except AttributeError:
-            pass
-        geo = self.settings.value("geometry")
-        if geo is not None:
-            self.restoreGeometry(geo)
+        # il tema (comune a tutta Eureka Suite) lo applica e lo aggiorna EurekaApp
+        geo = self.settings.get("geometry")
+        if geo:
+            self.restoreGeometry(QByteArray.fromBase64(geo.encode("ascii")))
         self.set_mode(self.mode)
 
     # -------------------------------------------------------------- menu
@@ -189,13 +183,15 @@ class MainWindow(QMainWindow):
         tgroup = QActionGroup(self)
         for key, label in THEMES.items():
             a = QAction(label, self, checkable=True)
-            a.setChecked(key == self.theme)
+            a.setChecked(key == self.app.theme)
             a.triggered.connect(lambda _=False, k=key: self.set_theme(k))
             tgroup.addAction(a)
             m_theme.addAction(a)
 
         m_help = mb.addMenu("&Aiuto")
         self._act(m_help, "Scorciatoie da tastiera", "F1", self.show_shortcuts)
+        self._act(m_help, "Controlla aggiornamenti", None, lambda: self.app.check_updates(self))
+        m_help.addSeparator()
         self._act(m_help, "Informazioni su Kalendae", None, self.show_about)
 
     def _act(self, menu, text, shortcut, slot) -> QAction:
@@ -223,13 +219,11 @@ class MainWindow(QMainWindow):
 
     # -------------------------------------------------------- navigazione
     def set_theme(self, mode: str):
-        self.theme = mode
-        self.settings.setValue("theme", mode)
-        apply_theme(mode)
+        self.app.apply_theme(mode)   # salva la scelta per tutta la suite
 
     def set_mode(self, mode: str):
         self.mode = mode
-        self.settings.setValue("view", mode)
+        self.settings["view"] = mode
         self.stack.setCurrentWidget(self.views[mode])
         for b in self.view_buttons.buttons():
             b.setChecked(b.property("view") == mode)
@@ -467,11 +461,10 @@ class MainWindow(QMainWindow):
             "trascina un evento per spostarlo, trascina il bordo inferiore per cambiarne la durata."))
 
     def show_about(self):
-        QMessageBox.about(self, "Informazioni su Kalendae", (
-            f"<h3>Kalendae {__version__}</h3>"
-            "<p>Calendario libero e open source, scritto in Python con Qt (PySide6).</p>"
-            "<p>Le <i>Kalendae</i> (calende) erano il primo giorno di ogni mese nel calendario romano: da qui viene la parola «calendario».</p>"
-            f"<p>Dati salvati in:<br><code>{self.db.path}</code></p>"))
+        self.app.show_about(self, extra=(
+            "Le <i>Kalendae</i> (calende) erano il primo giorno di ogni mese nel calendario romano: "
+            "da qui viene la parola «calendario».<br><br>"
+            f"Dati salvati in:<br><code>{self.db.path}</code>"))
 
     # ------------------------------------------------------------ chiusura
     def _show_from_tray(self):
@@ -480,7 +473,8 @@ class MainWindow(QMainWindow):
         self.activateWindow()
 
     def closeEvent(self, e):
-        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings["geometry"] = bytes(self.saveGeometry().toBase64()).decode("ascii")
+        self.app.settings.save()
         if self.tray is not None and not self._quitting:
             e.ignore()
             self.hide()
